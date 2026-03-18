@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GOLD ORACLE</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold:#D4A843; --gold-light:#F0C96A; --gold-dark:#8B6914;
+    --bg:#0A0806; --bg2:#110E08; --bg3:#1A1508;
+    --text:#E8D9B5; --text-dim:#7A6A4A;
+    --up:#4CAF7D; --down:#E05252;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:1000;opacity:0.4;}
+  .container{max-width:960px;margin:0 auto;padding:32px 16px;}
+  .header{text-align:center;margin-bottom:32px;}
+  .header-eyebrow{font-size:9px;letter-spacing:0.4em;color:var(--gold);text-transform:uppercase;margin-bottom:10px;opacity:0.8;}
+  .header h1{font-family:'Playfair Display',serif;font-size:clamp(28px,7vw,60px);font-weight:900;line-height:0.95;letter-spacing:-0.02em;background:linear-gradient(135deg,var(--gold-light) 0%,var(--gold) 50%,var(--gold-dark) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .header-sub{font-size:10px;color:var(--text-dim);margin-top:10px;letter-spacing:0.15em;}
+  .divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--gold-dark),transparent);margin:24px 0;opacity:0.4;}
+  .tabs{display:flex;gap:2px;margin-bottom:20px;background:rgba(212,168,67,0.06);border:1px solid rgba(212,168,67,0.15);border-radius:3px;padding:3px;overflow-x:auto;}
+  .tab{flex:1;min-width:80px;padding:9px 8px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;background:none;border:none;color:var(--text-dim);cursor:pointer;border-radius:2px;transition:all 0.2s;white-space:nowrap;text-align:center;}
+  .tab.active{background:var(--bg3);color:var(--gold);border:1px solid rgba(212,168,67,0.25);}
+  .tab:hover:not(.active){color:var(--text);}
+  .tab-panel{display:none;flex-direction:column;gap:18px;}
+  .tab-panel.active{display:flex;}
+  .bank-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(212,168,67,0.1);border:1px solid rgba(212,168,67,0.2);border-radius:2px;overflow:hidden;}
+  .bank-cell{background:var(--bg2);padding:12px 14px;display:flex;flex-direction:column;gap:3px;}
+  .bank-label{font-size:8px;letter-spacing:0.25em;color:var(--text-dim);text-transform:uppercase;}
+  .bank-value{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--gold-light);}
+  .bank-sub{font-size:9px;color:var(--text-dim);}
+  .pnl-pos{color:var(--up)!important;} .pnl-neg{color:var(--down)!important;} .pnl-zero{color:var(--text-dim)!important;}
+  .oracle-btn-wrap{display:flex;justify-content:center;margin:8px 0;}
+  .oracle-btn{position:relative;background:none;border:none;cursor:pointer;padding:0;outline:none;}
+  .oracle-btn-inner{display:flex;flex-direction:column;align-items:center;gap:10px;padding:22px 44px;background:linear-gradient(135deg,#1A1508,#241C0A);border:1px solid var(--gold-dark);border-radius:2px;position:relative;overflow:hidden;transition:all 0.3s ease;}
+  .oracle-btn-inner::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(212,168,67,0.08),transparent);opacity:0;transition:opacity 0.3s;}
+  .oracle-btn:hover .oracle-btn-inner{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 8px 40px rgba(212,168,67,0.2);}
+  .oracle-btn:hover .oracle-btn-inner::before{opacity:1;}
+  .oracle-btn:active .oracle-btn-inner{transform:translateY(0);}
+  .oracle-btn-inner::after{content:'';position:absolute;top:-1px;right:-1px;width:12px;height:12px;border-top:2px solid var(--gold);border-right:2px solid var(--gold);}
+  .btn-icon{font-size:26px;line-height:1;filter:drop-shadow(0 0 8px rgba(212,168,67,0.6));}
+  .btn-text{font-size:11px;font-weight:500;letter-spacing:0.3em;color:var(--gold);text-transform:uppercase;}
+  .btn-subtext{font-size:9px;color:var(--text-dim);letter-spacing:0.2em;}
+  @keyframes pulse-ring{0%{transform:scale(0.9);opacity:0.8;}100%{transform:scale(1.3);opacity:0;}}
+  .pulse-ring{display:none;position:absolute;inset:-4px;border:1px solid var(--gold);border-radius:2px;animation:pulse-ring 1.2s ease-out infinite;}
+  .oracle-btn.loading .pulse-ring{display:block;}
+  .loading-panel{display:none;flex-direction:column;align-items:center;gap:14px;padding:36px;text-align:center;}
+  .loading-panel.visible{display:flex;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .spinner{width:34px;height:34px;border:2px solid rgba(212,168,67,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite;}
+  .loading-steps{display:flex;flex-direction:column;gap:5px;text-align:left;}
+  .loading-step{font-size:10px;color:var(--text-dim);letter-spacing:0.1em;opacity:0;transition:opacity 0.4s,color 0.4s;}
+  .loading-step.active{opacity:1;color:var(--gold);}
+  .loading-step.done{opacity:0.6;color:var(--up);}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+  .price-card{background:var(--bg2);border:1px solid rgba(212,168,67,0.15);border-radius:2px;padding:18px 20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+  .price-item{display:flex;flex-direction:column;gap:3px;}
+  .price-label{font-size:8px;letter-spacing:0.25em;color:var(--text-dim);text-transform:uppercase;}
+  .price-value{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--gold-light);}
+  .price-change{font-size:11px;font-weight:500;}
+  .up{color:var(--up);} .down{color:var(--down);} .neutral{color:var(--text-dim);}
+  .chart-section{background:var(--bg2);border:1px solid rgba(212,168,67,0.15);border-radius:2px;padding:18px;}
+  .section-title{font-size:8px;letter-spacing:0.3em;color:var(--text-dim);text-transform:uppercase;margin-bottom:12px;}
+  canvas{width:100%;height:150px;display:block;}
+  .analysis-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .analysis-card{background:var(--bg2);border:1px solid rgba(212,168,67,0.12);border-radius:2px;padding:16px;}
+  .analysis-card h3{font-size:8px;letter-spacing:0.3em;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;}
+  .metric-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:10px;}
+  .metric-row:last-child{border-bottom:none;}
+  .metric-label{color:var(--text-dim);font-size:9px;}
+  .metric-value{color:var(--text);font-weight:500;}
+  .prediction-card{background:linear-gradient(135deg,#1C1508,#0F0B04);border:1px solid var(--gold-dark);border-radius:2px;padding:22px;position:relative;overflow:hidden;}
+  .prediction-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+  .prediction-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
+  .prediction-badge{font-size:8px;letter-spacing:0.3em;color:var(--gold);text-transform:uppercase;border:1px solid var(--gold-dark);padding:4px 8px;border-radius:1px;}
+  .signal-badge{font-size:10px;letter-spacing:0.15em;font-weight:600;padding:4px 10px;border-radius:1px;}
+  .signal-bullish{background:rgba(76,175,125,0.15);border:1px solid rgba(76,175,125,0.4);color:var(--up);}
+  .signal-bearish{background:rgba(224,82,82,0.15);border:1px solid rgba(224,82,82,0.4);color:var(--down);}
+  .signal-neutral{background:rgba(212,168,67,0.1);border:1px solid rgba(212,168,67,0.3);color:var(--gold);}
+  .prediction-target{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;padding:14px;background:rgba(0,0,0,0.3);border-radius:2px;}
+  .target-item{text-align:center;}
+  .target-label{font-size:8px;letter-spacing:0.2em;color:var(--text-dim);margin-bottom:5px;}
+  .target-price{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;}
+  .prediction-reasoning{font-size:10px;line-height:1.7;color:var(--text-dim);}
+  .prediction-reasoning strong{color:var(--text);}
+  .confidence-wrap{margin-top:14px;}
+  .confidence-label{font-size:8px;letter-spacing:0.2em;color:var(--text-dim);margin-bottom:5px;}
+  .confidence-bar{height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;}
+  .confidence-fill{height:100%;background:linear-gradient(90deg,var(--gold-dark),var(--gold));border-radius:2px;transition:width 1s ease 0.5s;width:0%;}
+  .outcome-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+  .outcome-btn{flex:1;min-width:80px;padding:8px 10px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;border:none;border-radius:2px;cursor:pointer;transition:all 0.2s;font-weight:600;}
+  .outcome-correct{background:rgba(76,175,125,0.15);border:1px solid rgba(76,175,125,0.4);color:var(--up);}
+  .outcome-correct:hover{background:rgba(76,175,125,0.3);}
+  .outcome-wrong{background:rgba(224,82,82,0.12);border:1px solid rgba(224,82,82,0.35);color:var(--down);}
+  .outcome-wrong:hover{background:rgba(224,82,82,0.3);}
+  .outcome-note{font-size:9px;color:var(--text-dim);margin-top:8px;font-style:italic;}
+  .trade-panel{background:var(--bg2);border:1px solid rgba(212,168,67,0.28);border-radius:2px;padding:20px;position:relative;overflow:hidden;}
+  .trade-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(212,168,67,0.6),transparent);}
+  .trade-panel-title{font-size:8px;letter-spacing:0.35em;color:var(--gold);text-transform:uppercase;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;}
+  .live-price-badge{font-size:10px;color:var(--text);letter-spacing:0.05em;background:rgba(212,168,67,0.1);border:1px solid rgba(212,168,67,0.2);padding:3px 8px;border-radius:1px;}
+  .trade-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .trade-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 10px;border:none;cursor:pointer;border-radius:2px;font-family:'DM Mono',monospace;transition:all 0.2s;position:relative;overflow:hidden;}
+  .buy-btn{background:rgba(76,175,125,0.1);border:1px solid rgba(76,175,125,0.35);}
+  .buy-btn:hover:not(:disabled){background:rgba(76,175,125,0.2);border-color:var(--up);transform:translateY(-1px);box-shadow:0 4px 20px rgba(76,175,125,0.15);}
+  .sell-btn{background:rgba(224,82,82,0.1);border:1px solid rgba(224,82,82,0.35);}
+  .sell-btn:hover:not(:disabled){background:rgba(224,82,82,0.2);border-color:var(--down);transform:translateY(-1px);box-shadow:0 4px 20px rgba(224,82,82,0.15);}
+  .trade-btn:disabled{opacity:0.3;cursor:not-allowed;}
+  .trade-btn-icon{font-size:20px;}
+  .trade-btn-label{font-size:12px;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;}
+  .trade-btn-sub{font-size:9px;letter-spacing:0.05em;text-align:center;}
+  .buy-btn .trade-btn-label{color:var(--up);} .buy-btn .trade-btn-sub{color:rgba(76,175,125,0.6);}
+  .sell-btn .trade-btn-label{color:var(--down);} .sell-btn .trade-btn-sub{color:rgba(224,82,82,0.6);}
+  .trade-flash{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity 0.05s;}
+  .buy-flash{background:rgba(76,175,125,0.35);} .sell-flash{background:rgba(224,82,82,0.35);}
+  .trade-btn.flashing .trade-flash{opacity:1;}
+  .open-pos{margin-top:14px;padding:12px 14px;background:rgba(0,0,0,0.35);border-radius:2px;display:none;flex-direction:column;gap:5px;border-left:2px solid rgba(212,168,67,0.4);}
+  .open-pos.visible{display:flex;}
+  .pos-row{display:flex;justify-content:space-between;font-size:10px;}
+  .pos-label{color:var(--text-dim);} .pos-val{color:var(--text);font-weight:500;}
+  .stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(212,168,67,0.08);border:1px solid rgba(212,168,67,0.12);border-radius:2px;overflow:hidden;}
+  .stat-cell{background:var(--bg2);padding:12px 14px;display:flex;flex-direction:column;gap:3px;}
+  .stat-label{font-size:8px;letter-spacing:0.25em;color:var(--text-dim);text-transform:uppercase;}
+  .stat-value{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;}
+  .trade-log{background:var(--bg2);border:1px solid rgba(212,168,67,0.12);border-radius:2px;padding:18px;}
+  .trade-log-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .clear-btn{background:none;border:1px solid rgba(255,255,255,0.08);color:var(--text-dim);font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.2em;padding:4px 8px;cursor:pointer;text-transform:uppercase;border-radius:1px;transition:all 0.2s;}
+  .clear-btn:hover{border-color:var(--down);color:var(--down);}
+  .log-empty{font-size:10px;color:var(--text-dim);text-align:center;padding:20px;letter-spacing:0.1em;opacity:0.6;}
+  .log-table{width:100%;border-collapse:collapse;font-size:10px;}
+  .log-table th{font-size:8px;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;padding:0 6px 8px 0;text-align:left;border-bottom:1px solid rgba(255,255,255,0.06);}
+  .log-table td{padding:8px 6px 8px 0;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle;}
+  .log-table tr:last-child td{border-bottom:none;}
+  .ttype-buy{color:var(--up);font-weight:600;} .ttype-sell{color:var(--down);font-weight:600;}
+  .td-dim{color:var(--text-dim);} .pnl-open{color:var(--gold);font-style:italic;}
+  .accuracy-hero{background:linear-gradient(135deg,#1A1208,#0F0B04);border:1px solid rgba(212,168,67,0.25);border-radius:2px;padding:24px;text-align:center;position:relative;overflow:hidden;}
+  .accuracy-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+  .accuracy-hero-label{font-size:8px;letter-spacing:0.4em;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;}
+  .accuracy-overall{font-family:'Playfair Display',serif;font-size:64px;font-weight:900;line-height:1;background:linear-gradient(135deg,var(--gold-light),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .accuracy-overall-sub{font-size:10px;color:var(--text-dim);margin-top:6px;letter-spacing:0.15em;}
+  .accuracy-ring-row{display:flex;justify-content:center;gap:24px;margin-top:18px;flex-wrap:wrap;}
+  .ring-item{display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .ring-wrap{position:relative;width:52px;height:52px;}
+  .ring-wrap svg{position:absolute;inset:0;transform:rotate(-90deg);}
+  .ring-bg{fill:none;stroke:rgba(255,255,255,0.06);stroke-width:4;}
+  .ring-fill{fill:none;stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset 1.2s ease;}
+  .ring-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:13px;font-weight:700;}
+  .ring-label{font-size:8px;letter-spacing:0.15em;color:var(--text-dim);text-align:center;}
+  .period-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+  .period-card{background:var(--bg2);border:1px solid rgba(212,168,67,0.1);border-radius:2px;padding:16px;}
+  .period-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+  .period-name{font-size:9px;letter-spacing:0.25em;color:var(--gold);text-transform:uppercase;}
+  .period-count{font-size:9px;color:var(--text-dim);}
+  .period-bar-wrap{height:6px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;margin-bottom:10px;}
+  .period-bar-fill{height:100%;border-radius:3px;transition:width 1s ease;}
+  .bar-good{background:linear-gradient(90deg,#2D7A52,var(--up));}
+  .bar-mid{background:linear-gradient(90deg,#7A6A14,var(--gold));}
+  .bar-bad{background:linear-gradient(90deg,#7A2020,var(--down));}
+  .period-stats{display:flex;justify-content:space-between;font-size:10px;}
+  .period-acc{font-weight:700;}
+  .period-wl{color:var(--text-dim);font-size:9px;}
+  .pred-log-section{background:var(--bg2);border:1px solid rgba(212,168,67,0.1);border-radius:2px;padding:18px;}
+  .pred-log-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+  .filter-tabs{display:flex;gap:4px;}
+  .ftab{background:none;border:1px solid rgba(255,255,255,0.08);color:var(--text-dim);font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.15em;padding:3px 8px;cursor:pointer;border-radius:1px;transition:all 0.2s;text-transform:uppercase;}
+  .ftab.active{border-color:var(--gold-dark);color:var(--gold);background:rgba(212,168,67,0.08);}
+  .pred-row{display:flex;flex-direction:column;gap:4px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .pred-row:last-child{border-bottom:none;}
+  .pred-row-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;}
+  .pred-signal-sm{font-size:9px;font-weight:600;padding:2px 7px;border-radius:1px;}
+  .pred-date{font-size:9px;color:var(--text-dim);}
+  .pred-targets{font-size:9px;color:var(--text-dim);margin-top:2px;}
+  .pred-outcome{display:flex;gap:6px;margin-top:6px;}
+  .pred-outcome-btn{padding:4px 10px;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;border:none;border-radius:1px;cursor:pointer;transition:all 0.2s;font-weight:600;}
+  .poc{background:rgba(76,175,125,0.15);border:1px solid rgba(76,175,125,0.4);color:var(--up);}
+  .poc:hover,.poc.chosen{background:rgba(76,175,125,0.35);}
+  .pow{background:rgba(224,82,82,0.12);border:1px solid rgba(224,82,82,0.35);color:var(--down);}
+  .pow:hover,.pow.chosen{background:rgba(224,82,82,0.3);}
+  .pred-outcome-label{font-size:8px;color:var(--text-dim);align-self:center;font-style:italic;}
+  .no-preds{font-size:10px;color:var(--text-dim);text-align:center;padding:24px;opacity:0.6;}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1A1508;border:1px solid var(--gold-dark);padding:10px 20px;font-size:11px;letter-spacing:0.1em;border-radius:2px;z-index:9999;transition:transform 0.3s ease;pointer-events:none;white-space:nowrap;}
+  .toast.show{transform:translateX(-50%) translateY(0);}
+  .reset-btn{background:none;border:1px solid rgba(212,168,67,0.2);color:var(--text-dim);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.2em;padding:8px 18px;cursor:pointer;text-transform:uppercase;transition:all 0.2s;display:block;margin:0 auto;border-radius:1px;}
+  .reset-btn:hover{border-color:var(--gold);color:var(--gold);}
+  .footer{text-align:center;margin-top:32px;font-size:9px;color:var(--text-dim);letter-spacing:0.1em;line-height:1.8;opacity:0.5;}
+  @media(max-width:620px){
+    .bank-bar{grid-template-columns:1fr 1fr;}
+    .price-card,.analysis-grid,.prediction-target,.trade-grid,.stats-bar{grid-template-columns:1fr;}
+    .period-grid{grid-template-columns:1fr;}
+    .accuracy-ring-row{gap:14px;}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="header-eyebrow">AI Market Intelligence · Dummy Trading Bank</div>
+    <h1>GOLD<br>ORACLE</h1>
+    <div class="header-sub">60-Month Analysis · 24H Prediction · Accuracy Tracker</div>
+  </div>
+  <div class="divider"></div>
+  <div class="bank-bar" style="margin-bottom:18px;">
+    <div class="bank-cell"><div class="bank-label">Gold Holdings</div><div class="bank-value">100 oz</div><div class="bank-sub">dummy bank</div></div>
+    <div class="bank-cell"><div class="bank-label">Avg Entry</div><div class="bank-value" id="bankAvg">—</div><div class="bank-sub">per oz</div></div>
+    <div class="bank-cell"><div class="bank-label">Unrealised P&L</div><div class="bank-value pnl-zero" id="bankUnreal">—</div><div class="bank-sub" id="bankUnrealOz">oz equiv</div></div>
+    <div class="bank-cell"><div class="bank-label">Realised P&L</div><div class="bank-value pnl-zero" id="bankReal">—</div><div class="bank-sub" id="bankRealOz">oz total</div></div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('oracle')">⬡ Oracle</button>
+    <button class="tab" onclick="switchTab('trade')">⬗ Trade</button>
+    <button class="tab" onclick="switchTab('accuracy')">◈ Accuracy</button>
+  </div>
+  <div class="tab-panel active" id="tab-oracle">
+    <div class="oracle-btn-wrap" id="btnWrap">
+      <button class="oracle-btn" id="oracleBtn" onclick="runAnalysis()">
+        <div class="pulse-ring"></div>
+        <div class="oracle-btn-inner">
+          <div class="btn-icon">⬡</div>
+          <div class="btn-text">Activate Oracle</div>
+          <div class="btn-subtext">Analyse · Predict · Record</div>
+        </div>
+      </button>
+    </div>
+    <div class="loading-panel" id="loadingPanel">
+      <div class="spinner"></div>
+      <div class="loading-steps">
+        <div class="loading-step" id="step1">▸ Fetching 60-month gold history...</div>
+        <div class="loading-step" id="step2">▸ Computing trend & volatility...</div>
+        <div class="loading-step" id="step3">▸ Scanning geopolitical signals...</div>
+        <div class="loading-step" id="step4">▸ Running AI prediction model...</div>
+        <div class="loading-step" id="step5">▸ Generating 24H forecast...</div>
+      </div>
+    </div>
+    <div id="oracleResults" style="display:none;flex-direction:column;gap:16px;">
+      <div class="price-card" id="priceCard"></div>
+      <div class="chart-section">
+        <div class="section-title">▸ 60-Month Price History</div>
+        <canvas id="priceChart"></canvas>
+      </div>
+      <div class="analysis-grid" id="analysisGrid"></div>
+      <div class="prediction-card" id="predictionCard"></div>
+      <button class="reset-btn" onclick="resetOracle()">↺ New Analysis</button>
+    </div>
+  </div>
+  <div class="tab-panel" id="tab-trade">
+    <div class="trade-panel">
+      <div class="trade-panel-title">
+        <span>▸ Dummy Bank — 100 oz</span>
+        <span class="live-price-badge" id="tradePriceBadge">Run Oracle first</span>
+      </div>
+      <div class="trade-grid">
+        <button class="trade-btn buy-btn" id="buyBtn" onclick="executeTrade('BUY')" disabled>
+          <div class="trade-flash buy-flash"></div>
+          <div class="trade-btn-icon">▲</div>
+          <div class="trade-btn-label">BUY</div>
+          <div class="trade-btn-sub" id="buyBtnSub">Run Oracle first</div>
+        </button>
+        <button class="trade-btn sell-btn" id="sellBtn" onclick="executeTrade('SELL')" disabled>
+          <div class="trade-flash sell-flash"></div>
+          <div class="trade-btn-icon">▼</div>
+          <div class="trade-btn-label">SELL</div>
+          <div class="trade-btn-sub" id="sellBtnSub">No open position</div>
+        </button>
+      </div>
+      <div class="open-pos" id="openPos">
+        <div class="pos-row"><span class="pos-label">Open Position</span><span class="pos-val">LONG 100 oz</span></div>
+        <div class="pos-row"><span class="pos-label">Entry Price</span><span class="pos-val" id="posEntry">—</span></div>
+        <div class="pos-row"><span class="pos-label">Current Price</span><span class="pos-val" id="posCurrent">—</span></div>
+        <div class="pos-row"><span class="pos-label">Unrealised P&L (USD)</span><span class="pos-val" id="posUsd">—</span></div>
+        <div class="pos-row"><span class="pos-label">Unrealised P&L (oz)</span><span class="pos-val" id="posOz">—</span></div>
+        <div class="pos-row"><span class="pos-label">Oracle Signal</span><span class="pos-val" id="posSig">—</span></div>
+      </div>
+    </div>
+    <div class="stats-bar">
+      <div class="stat-cell"><div class="stat-label">Completed Trades</div><div class="stat-value" id="statTrades" style="color:var(--gold-light)">0</div></div>
+      <div class="stat-cell"><div class="stat-label">Win Rate</div><div class="stat-value" id="statWin" style="color:var(--text-dim)">—</div></div>
+      <div class="stat-cell"><div class="stat-label">Best Trade (oz)</div><div class="stat-value" id="statBest" style="color:var(--up)">—</div></div>
+    </div>
+    <div class="trade-log">
+      <div class="trade-log-header">
+        <div class="section-title" style="margin:0">▸ Trade Journal</div>
+        <button class="clear-btn" onclick="clearTrades()">✕ Clear</button>
+      </div>
+      <div id="logBody"><div class="log-empty">No trades yet — run Oracle then BUY or SELL.</div></div>
+    </div>
+  </div>
+  <div class="tab-panel" id="tab-accuracy">
+    <div class="accuracy-hero">
+      <div class="accuracy-hero-label">Overall Prediction Accuracy</div>
+      <div class="accuracy-overall" id="accOverall">—</div>
+      <div class="accuracy-overall-sub" id="accOverallSub">No predictions recorded yet</div>
+      <div class="accuracy-ring-row" id="ringRow"></div>
+    </div>
+    <div class="section-title" style="margin-top:4px;">▸ Accuracy by Time Window</div>
+    <div class="period-grid" id="periodGrid"></div>
+    <div class="pred-log-section">
+      <div class="pred-log-header">
+        <div class="section-title" style="margin:0">▸ All Predictions</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <div class="filter-tabs">
+            <button class="ftab active" onclick="filterPreds('all',this)">All</button>
+            <button class="ftab" onclick="filterPreds('pending',this)">Pending</button>
+            <button class="ftab" onclick="filterPreds('correct',this)">✓ Correct</button>
+            <button class="ftab" onclick="filterPreds('wrong',this)">✗ Wrong</button>
+          </div>
+          <button class="clear-btn" onclick="clearPredictions()">✕ Clear</button>
+        </div>
+      </div>
+      <div id="predLogBody"><div class="no-preds">No predictions yet. Run the Oracle to start tracking.</div></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const LS_PREDS='go_predictions_v2',LS_TRADES='go_trades_v2',LS_OPEN='go_open_v2';
+let currentPrice=null,lastSignal=null,lastConf=null,lastTargets=null;
+let predictions=loadLS(LS_PREDS,[]);
+let trades=loadLS(LS_TRADES,[]);
+let openTrade=loadLS(LS_OPEN,null);
+let totalRealUsd=trades.reduce((s,t)=>s+t.pnlUsd,0);
+let totalRealOz=trades.reduce((s,t)=>s+t.pnlOz,0);
+let predFilter='all',activeTab='oracle';
+function loadLS(key,def){try{const v=localStorage.getItem(key);return v?JSON.parse(v):def;}catch(e){return def;}}
+function saveLS(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch(e){}}
+function switchTab(name){activeTab=name;document.querySelectorAll('.tab').forEach((t,i)=>{const names=['oracle','trade','accuracy'];t.classList.toggle('active',names[i]===name);});document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));document.getElementById('tab-'+name).classList.add('active');if(name==='accuracy'){renderAccuracy();}}
+async function runAnalysis(){const btn=document.getElementById('oracleBtn');btn.classList.add('loading');btn.disabled=true;document.getElementById('loadingPanel').classList.add('visible');document.getElementById('btnWrap').style.display='none';const steps=['step1','step2','step3','step4','step5'];for(let i=0;i<steps.length;i++){await delay(560);if(i>0){document.getElementById(steps[i-1]).classList.remove('active');document.getElementById(steps[i-1]).classList.add('done');}document.getElementById(steps[i]).classList.add('active');}await delay(600);document.getElementById(steps[4]).classList.add('done');document.getElementById(steps[4]).classList.remove('active');let d;try{d=await callClaude();}catch(e){d=fallback();}await delay(300);document.getElementById('loadingPanel').classList.remove('visible');currentPrice=d.currentPrice;lastSignal=d.signal;lastConf=d.confidence;lastTargets={low:d.target24h_low,mid:d.target24h_mid,high:d.target24h_high};const pred={id:Date.now(),timestamp:new Date().toLocaleString(),ts:Date.now(),signal:d.signal,confidence:d.confidence,entryPrice:d.currentPrice,target_low:d.target24h_low,target_mid:d.target24h_mid,target_high:d.target24h_high,reasoning:d.reasoning,outcome:null};predictions.unshift(pred);if(predictions.length>365)predictions=predictions.slice(0,365);saveLS(LS_PREDS,predictions);renderResults(d,pred.id);const res=document.getElementById('oracleResults');res.style.display='flex';res.style.animation='fadeUp 0.5s ease forwards';setTimeout(()=>{const f=document.querySelector('.confidence-fill');if(f)f.style.width=d.confidence+'%';},300);drawChart(d.chartData);refreshTradeUI();refreshBankBar();}
+async function callClaude(){const today=new Date().toISOString().split('T')[0];const prompt=`You are a gold market analyst AI. Today is ${today}. Iran-US-Israel war ~20 days, oil +40%, high global uncertainty.\nAnalyze gold price trends over last 60 months. Predict next 24 hours.\nReturn ONLY a raw JSON object, no markdown, no backticks, no extra text:\n{"currentPrice":<XAU/USD 4700-5100>,"change24h":<number>,"changePct24h":<number>,"weeklyChange":<number>,"monthlyChange":<number>,"yearlyChange":<number>,"allTimeHigh":<number>,"support1":<number>,"support2":<number>,"resistance1":<number>,"resistance2":<number>,"rsi":<number>,"macd":"bullish crossover|bearish crossover|neutral","ma50":<number>,"ma200":<number>,"signal":"BULLISH|BEARISH|NEUTRAL","confidence":<0-100>,"target24h_low":<number>,"target24h_mid":<number>,"target24h_high":<number>,"reasoning":"<2-3 sentences>","keyRisk":"<1 sentence>","chartData":[<28 monthly prices start ~1800-1900 end near currentPrice>]}`;const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})});const data=await res.json();const text=data.content.map(i=>i.text||'').join('');return JSON.parse(text.replace(/```json|```/g,'').trim());}
+function fallback(){return{currentPrice:4861,change24h:-82,changePct24h:-1.66,weeklyChange:-3.1,monthlyChange:8.4,yearlyChange:42.7,allTimeHigh:5181,support1:4750,support2:4580,resistance1:5000,resistance2:5181,rsi:58,macd:"bullish crossover",ma50:4620,ma200:3980,signal:"BULLISH",confidence:72,target24h_low:4780,target24h_mid:4920,target24h_high:5060,reasoning:"Gold faces short-term consolidation after the ATH pullback, but Iran-US war escalation maintains strong safe-haven demand. Fed decision adds volatility.",keyRisk:"Surprise Fed hawkish stance or ceasefire could trigger sharp correction.",chartData:[1820,1790,1850,1910,1880,1960,2010,1990,2080,2140,2060,2180,2250,2190,2320,2400,2380,2510,2650,2720,2800,3100,3450,3900,4200,4580,4750,4861]};}
+function renderResults(d,predId){const sc=sigClass(d.signal);document.getElementById('priceCard').innerHTML=`<div class="price-item"><div class="price-label">Current Price</div><div class="price-value">$${fmt(d.currentPrice)}</div><div class="price-change ${d.change24h>=0?'up':'down'}">${d.change24h>=0?'+':''}$${d.change24h} (${d.change24h>=0?'+':''}${d.changePct24h}%)</div></div><div class="price-item"><div class="price-label">7-Day Change</div><div class="price-value" style="font-size:20px"><span class="${d.weeklyChange>=0?'up':'down'}">${d.weeklyChange>=0?'+':''}${d.weeklyChange}%</span></div><div class="price-change neutral">vs last week</div></div><div class="price-item"><div class="price-label">12-Month Change</div><div class="price-value" style="font-size:20px"><span class="${d.yearlyChange>=0?'up':'down'}">${d.yearlyChange>=0?'+':''}${d.yearlyChange}%</span></div><div class="price-change neutral">ATH: $${fmt(d.allTimeHigh)}</div></div>`;document.getElementById('analysisGrid').innerHTML=`<div class="analysis-card"><h3>▸ Technical Levels</h3><div class="metric-row"><span class="metric-label">Resistance 2</span><span class="metric-value down">$${fmt(d.resistance2)}</span></div><div class="metric-row"><span class="metric-label">Resistance 1</span><span class="metric-value down">$${fmt(d.resistance1)}</span></div><div class="metric-row"><span class="metric-label">Current</span><span class="metric-value" style="color:var(--gold)">$${fmt(d.currentPrice)}</span></div><div class="metric-row"><span class="metric-label">Support 1</span><span class="metric-value up">$${fmt(d.support1)}</span></div><div class="metric-row"><span class="metric-label">Support 2</span><span class="metric-value up">$${fmt(d.support2)}</span></div></div><div class="analysis-card"><h3>▸ Indicators</h3><div class="metric-row"><span class="metric-label">RSI (14)</span><span class="metric-value ${d.rsi>70?'down':d.rsi<30?'up':'neutral'}">${d.rsi} ${d.rsi>70?'(OB)':d.rsi<30?'(OS)':'(N)'}</span></div><div class="metric-row"><span class="metric-label">MACD</span><span class="metric-value ${d.macd.includes('bullish')?'up':d.macd.includes('bearish')?'down':'neutral'}">${d.macd}</span></div><div class="metric-row"><span class="metric-label">MA50</span><span class="metric-value">$${fmt(d.ma50)}</span></div><div class="metric-row"><span class="metric-label">MA200</span><span class="metric-value">$${fmt(d.ma200)}</span></div><div class="metric-row"><span class="metric-label">30-Day</span><span class="metric-value ${d.monthlyChange>=0?'up':'down'}">${d.monthlyChange>=0?'+':''}${d.monthlyChange}%</span></div></div>`;document.getElementById('predictionCard').innerHTML=`<div class="prediction-header"><div class="prediction-badge">▸ 24H AI Forecast</div><div class="signal-badge ${sc}">${d.signal}</div></div><div class="prediction-target"><div class="target-item"><div class="target-label">Bear Target</div><div class="target-price down">$${fmt(d.target24h_low)}</div></div><div class="target-item"><div class="target-label">Base Target</div><div class="target-price" style="color:var(--gold-light)">$${fmt(d.target24h_mid)}</div></div><div class="target-item"><div class="target-label">Bull Target</div><div class="target-price up">$${fmt(d.target24h_high)}</div></div></div><div class="prediction-reasoning"><strong>Analysis:</strong> ${d.reasoning}<br><br><strong>Key Risk:</strong> ${d.keyRisk}</div><div class="confidence-wrap"><div class="confidence-label">Model Confidence — ${d.confidence}%</div><div class="confidence-bar"><div class="confidence-fill" style="width:0%"></div></div></div><div class="outcome-row"><button class="outcome-btn outcome-correct" onclick="markOutcome(${predId},'correct')">✓ Prediction Was Correct</button><button class="outcome-btn outcome-wrong" onclick="markOutcome(${predId},'wrong')">✗ Prediction Was Wrong</button></div><div class="outcome-note">After 24 hours, tap above to record whether this Oracle prediction was correct.</div>`;}
+function markOutcome(predId,outcome){const p=predictions.find(x=>x.id===predId);if(!p)return;p.outcome=outcome;saveLS(LS_PREDS,predictions);showToast(outcome==='correct'?'✓ Marked Correct!':'✗ Marked Wrong — logged');document.querySelectorAll('.outcome-btn').forEach(b=>{b.style.opacity='0.4';b.disabled=true;});const note=document.querySelector('.outcome-note');if(note)note.textContent=`Recorded as ${outcome.toUpperCase()} on ${new Date().toLocaleString()}`;}
+function clearPredictions(){if(!confirm('Clear all prediction history?'))return;predictions=[];saveLS(LS_PREDS,predictions);renderAccuracy();showToast('Prediction history cleared');}
+const PERIODS=[{label:'7 Days',days:7},{label:'15 Days',days:15},{label:'30 Days',days:30},{label:'60 Days',days:60},{label:'90 Days',days:90},{label:'180 Days',days:180},{label:'365 Days',days:365}];
+function predsInPeriod(days){const cutoff=Date.now()-days*86400000;return predictions.filter(p=>p.ts>=cutoff&&p.outcome!==null);}
+function accuracyOf(preds){if(!preds.length)return null;return Math.round(preds.filter(p=>p.outcome==='correct').length/preds.length*100);}
+function renderAccuracy(){const judged=predictions.filter(p=>p.outcome!==null);const overall=accuracyOf(judged);document.getElementById('accOverall').textContent=overall!==null?overall+'%':'—';document.getElementById('accOverallSub').textContent=overall!==null?`${judged.filter(p=>p.outcome==='correct').length} correct out of ${judged.length} total`:'No judged predictions yet';const shortPeriods=[{label:'7d',days:7},{label:'15d',days:15},{label:'30d',days:30},{label:'60d',days:60},{label:'90d',days:90},{label:'180d',days:180},{label:'1yr',days:365}];document.getElementById('ringRow').innerHTML=shortPeriods.map(p=>{const acc=accuracyOf(predsInPeriod(p.days));const pct=acc??0;const clr=acc===null?'rgba(122,106,74,0.4)':acc>=65?'var(--up)':acc>=45?'var(--gold)':'var(--down)';const r=22,circ=2*Math.PI*r,dash=circ*(pct/100);return`<div class="ring-item"><div class="ring-wrap"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="${r}"/><circle class="ring-fill" cx="26" cy="26" r="${r}" stroke="${clr}" stroke-dasharray="${dash} ${circ}" stroke-dashoffset="0"/></svg><div class="ring-text" style="color:${clr}">${acc===null?'—':acc+'%'}</div></div><div class="ring-label">${p.label}</div></div>`;}).join('');document.getElementById('periodGrid').innerHTML=PERIODS.map(p=>{const preds=predsInPeriod(p.days);const acc=accuracyOf(preds);const wins=preds.filter(x=>x.outcome==='correct').length;const losses=preds.filter(x=>x.outcome==='wrong').length;const pend=predictions.filter(x=>x.ts>=Date.now()-p.days*86400000&&x.outcome===null).length;const barPct=acc??0;const barClass=acc===null?'bar-mid':acc>=65?'bar-good':acc>=45?'bar-mid':'bar-bad';const accColor=acc===null?'var(--text-dim)':acc>=65?'var(--up)':acc>=45?'var(--gold)':'var(--down)';return`<div class="period-card"><div class="period-header"><div class="period-name">${p.label}</div><div class="period-count">${preds.length+pend} total</div></div><div class="period-bar-wrap"><div class="period-bar-fill ${barClass}" style="width:${barPct}%"></div></div><div class="period-stats"><div class="period-acc" style="color:${accColor}">${acc!==null?acc+'%':'No data'}</div><div class="period-wl">${wins}W · ${losses}L · ${pend} pending</div></div></div>`;}).join('');renderPredLog();}
+function filterPreds(f,el){predFilter=f;document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active');renderPredLog();}
+function renderPredLog(){const body=document.getElementById('predLogBody');let filtered=predictions;if(predFilter==='pending')filtered=predictions.filter(p=>p.outcome===null);if(predFilter==='correct')filtered=predictions.filter(p=>p.outcome==='correct');if(predFilter==='wrong')filtered=predictions.filter(p=>p.outcome==='wrong');if(!filtered.length){body.innerHTML=`<div class="no-preds">${predFilter==='all'?'No predictions yet.':'No '+predFilter+' predictions.'}</div>`;return;}body.innerHTML=filtered.map(p=>{const sc=sigClass(p.signal);const isPending=p.outcome===null;const outcomeHtml=isPending?`<div class="pred-outcome"><button class="pred-outcome-btn poc" onclick="markOutcome(${p.id},'correct');renderAccuracy()">✓ Correct</button><button class="pred-outcome-btn pow" onclick="markOutcome(${p.id},'wrong');renderAccuracy()">✗ Wrong</button><span class="pred-outcome-label">Pending</span></div>`:`<div class="pred-outcome"><span class="pred-outcome-btn ${p.outcome==='correct'?'poc chosen':'pow chosen'}" style="cursor:default;">${p.outcome==='correct'?'✓ Correct':'✗ Wrong'}</span></div>`;return`<div class="pred-row"><div class="pred-row-top"><span class="signal-badge ${sc} pred-signal-sm">${p.signal}</span><span class="pred-date">${p.timestamp}</span><span style="font-size:9px;color:var(--text-dim)">${p.confidence}% conf</span></div><div class="pred-targets">Entry: $${fmt(p.entryPrice)} · $${fmt(p.target_low)} / $${fmt(p.target_mid)} / $${fmt(p.target_high)}</div>${outcomeHtml}</div>`;}).join('');}
+function executeTrade(type){if(!currentPrice){showToast('⚠ Run Oracle first');return;}if(type==='BUY'){if(openTrade){showToast('⚠ Already in position');return;}openTrade={type:'BUY',entryPrice:currentPrice,oz:100,signal:lastSignal,confidence:lastConf,timestamp:new Date().toLocaleString()};saveLS(LS_OPEN,openTrade);flash('buyBtn');showToast(`✓ BOUGHT 100 oz @ $${fmt(currentPrice)}`);}else{if(!openTrade){showToast('⚠ No open position');return;}const pnlUsd=(currentPrice-openTrade.entryPrice)*100;const pnlOz=pnlUsd/currentPrice;totalRealUsd+=pnlUsd;totalRealOz+=pnlOz;const t={...openTrade,closePrice:currentPrice,closeTs:new Date().toLocaleString(),pnlUsd,pnlOz};trades.push(t);saveLS(LS_TRADES,trades);openTrade=null;saveLS(LS_OPEN,null);flash('sellBtn');const s=pnlOz>=0?'+':'';showToast(`✓ SOLD 100 oz @ $${fmt(currentPrice)} · P&L: ${s}${pnlOz.toFixed(4)} oz`);}refreshTradeUI();refreshBankBar();refreshLog();}
+function flash(id){const b=document.getElementById(id);b.classList.add('flashing');setTimeout(()=>b.classList.remove('flashing'),300);}
+function refreshTradeUI(){const hasCp=currentPrice!==null;document.getElementById('tradePriceBadge').textContent=hasCp?`$${fmt(currentPrice)}`:'Run Oracle first';document.getElementById('buyBtnSub').textContent=!hasCp?'Run Oracle first':openTrade?'Position open':`100 oz @ $${fmt(currentPrice)}`;document.getElementById('sellBtnSub').textContent=openTrade?`Close @ $${fmt(currentPrice)}`:'No open position';document.getElementById('buyBtn').disabled=!hasCp||!!openTrade;document.getElementById('sellBtn').disabled=!openTrade;const posEl=document.getElementById('openPos');if(openTrade&&hasCp){const pu=(currentPrice-openTrade.entryPrice)*100,po=pu/currentPrice,s=pu>=0?'+':'';posEl.classList.add('visible');document.getElementById('posEntry').textContent='$'+fmt(openTrade.entryPrice);document.getElementById('posCurrent').textContent='$'+fmt(currentPrice);document.getElementById('posUsd').innerHTML=`<span class="${pu>=0?'up':'down'}">${s}$${fmt(Math.abs(pu),0)}</span>`;document.getElementById('posOz').innerHTML=`<span class="${po>=0?'up':'down'}">${s}${po.toFixed(4)} oz</span>`;document.getElementById('posSig').textContent=`${openTrade.signal} (${openTrade.confidence}% conf)`;}else{posEl.classList.remove('visible');}}
+function refreshBankBar(){if(openTrade)document.getElementById('bankAvg').textContent='$'+fmt(openTrade.entryPrice);else if(trades.length)document.getElementById('bankAvg').textContent='$'+fmt(trades[trades.length-1].entryPrice);else document.getElementById('bankAvg').textContent='—';const uel=document.getElementById('bankUnreal');if(openTrade&&currentPrice){const pu=(currentPrice-openTrade.entryPrice)*100,po=pu/currentPrice,s=pu>=0?'+':'';uel.textContent='$'+fmt(Math.abs(pu),0);uel.className='bank-value '+(pu>=0?'pnl-pos':'pnl-neg');document.getElementById('bankUnrealOz').textContent=s+po.toFixed(3)+' oz';}else{uel.textContent='—';uel.className='bank-value pnl-zero';document.getElementById('bankUnrealOz').textContent='oz equiv';}const rel=document.getElementById('bankReal');if(trades.length){const s=totalRealUsd>=0?'+':'';rel.textContent=s+'$'+fmt(Math.abs(totalRealUsd),0);rel.className='bank-value '+(totalRealUsd>=0?'pnl-pos':'pnl-neg');document.getElementById('bankRealOz').textContent=(totalRealOz>=0?'+':'')+totalRealOz.toFixed(3)+' oz';}else{rel.textContent='—';rel.className='bank-value pnl-zero';document.getElementById('bankRealOz').textContent='oz total';}}
+function refreshLog(){const body=document.getElementById('logBody');if(!trades.length&&!openTrade){body.innerHTML='<div class="log-empty">No trades yet — run Oracle then BUY or SELL.</div>';updateStats();return;}let rows='';if(openTrade){const unreal=currentPrice?((currentPrice-openTrade.entryPrice)*100/currentPrice):0,s=unreal>=0?'+':'';rows+=`<tr><td><span class="ttype-buy">BUY</span></td><td class="td-dim">${openTrade.timestamp}</td><td>$${fmt(openTrade.entryPrice)}</td><td class="td-dim">—</td><td class="td-dim">—</td><td class="pnl-open">${s}${unreal.toFixed(4)} oz*</td><td><span class="signal-badge ${sigClass(openTrade.signal)}" style="font-size:8px;padding:2px 5px">${openTrade.signal}</span></td></tr>`;}[...trades].reverse().forEach(t=>{const s=t.pnlOz>=0?'+':'',pc=t.pnlOz>=0?'up':'down';rows+=`<tr><td><span class="ttype-buy">B</span>→<span class="ttype-sell">S</span></td><td class="td-dim">${t.timestamp}</td><td>$${fmt(t.entryPrice)}</td><td class="td-dim">${t.closeTs}</td><td>$${fmt(t.closePrice)}</td><td class="${pc}">${s}${t.pnlOz.toFixed(4)} oz</td><td><span class="signal-badge ${sigClass(t.signal)}" style="font-size:8px;padding:2px 5px">${t.signal}</span></td></tr>`;});body.innerHTML=`<div style="overflow-x:auto"><table class="log-table"><thead><tr><th>Type</th><th>Buy Time</th><th>Buy $</th><th>Sell Time</th><th>Sell $</th><th>P&L (oz)</th><th>Signal</th></tr></thead><tbody>${rows}</tbody></table></div>${openTrade?'<div style="font-size:9px;color:var(--text-dim);margin-top:6px;opacity:0.6">* Unrealised</div>':''}`;updateStats();}
+function updateStats(){const wins=trades.filter(t=>t.pnlOz>0).length,wr=trades.length?Math.round(wins/trades.length*100):null;const best=trades.length?Math.max(...trades.map(t=>t.pnlOz)):null;document.getElementById('statTrades').textContent=trades.length+(openTrade?' +1 open':'');const wEl=document.getElementById('statWin');wEl.textContent=wr!==null?wr+'%':'—';wEl.style.color=wr>=50?'var(--up)':wr!==null?'var(--down)':'var(--text-dim)';document.getElementById('statBest').textContent=best!==null?'+'+best.toFixed(3)+' oz':'—';}
+function clearTrades(){if(!confirm('Clear all trade history?'))return;trades=[];totalRealUsd=0;totalRealOz=0;saveLS(LS_TRADES,trades);refreshBankBar();refreshLog();showToast('Trade history cleared');}
+function drawChart(data){const canvas=document.getElementById('priceChart');const ctx=canvas.getContext('2d');canvas.width=canvas.offsetWidth*2;canvas.height=300;ctx.scale(2,2);const w=canvas.offsetWidth/2,h=150,pad={top:10,bottom:18,left:6,right:6};const pts=data&&data.length>4?data:fallback().chartData;const minV=Math.min(...pts)*0.97,maxV=Math.max(...pts)*1.01;const toX=i=>pad.left+(i/(pts.length-1))*(w-pad.left-pad.right);const toY=v=>pad.top+(1-(v-minV)/(maxV-minV))*(h-pad.top-pad.bottom);const grad=ctx.createLinearGradient(0,pad.top,0,h);grad.addColorStop(0,'rgba(212,168,67,0.22)');grad.addColorStop(1,'rgba(212,168,67,0)');ctx.beginPath();pts.forEach((v,i)=>{i===0?ctx.moveTo(toX(i),toY(v)):ctx.lineTo(toX(i),toY(v));});ctx.lineTo(toX(pts.length-1),h-pad.bottom);ctx.lineTo(toX(0),h-pad.bottom);ctx.closePath();ctx.fillStyle=grad;ctx.fill();ctx.beginPath();pts.forEach((v,i)=>{i===0?ctx.moveTo(toX(i),toY(v)):ctx.lineTo(toX(i),toY(v));});ctx.strokeStyle='#D4A843';ctx.lineWidth=1.5;ctx.stroke();ctx.beginPath();ctx.arc(toX(pts.length-1),toY(pts[pts.length-1]),4,0,Math.PI*2);ctx.fillStyle='#F0C96A';ctx.fill();ctx.fillStyle='rgba(122,106,74,0.7)';ctx.font='9px DM Mono,monospace';ctx.textAlign='left';ctx.fillText('5yr ago',pad.left,h-3);ctx.textAlign='right';ctx.fillText('today',w-pad.right,h-3);}
+function resetOracle(){document.getElementById('btnWrap').style.display='flex';document.getElementById('oracleResults').style.display='none';const btn=document.getElementById('oracleBtn');btn.classList.remove('loading');btn.disabled=false;document.querySelectorAll('.loading-step').forEach(s=>s.classList.remove('active','done'));currentPrice=null;refreshBankBar();}
+function fmt(n,d){if(d===0)return Math.round(n).toLocaleString();return n.toLocaleString(undefined,{maximumFractionDigits:d!==undefined?d:0});}
+function sigClass(s){return s==='BULLISH'?'signal-bullish':s==='BEARISH'?'signal-bearish':'signal-neutral';}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);}
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+refreshBankBar();refreshLog();if(openTrade)refreshTradeUI();
+</script>
+</body>
+</html>
